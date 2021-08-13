@@ -6,7 +6,7 @@ ARG MODEL_ANALYZER_CONTAINER_VERSION=21.07
 
 FROM ${SDK_IMAGE} as sdk_image
 
-FROM $BASE_IMAGE as ftbe_sdk
+FROM $BASE_IMAGE
 
 ARG MODEL_ANALYZER_VERSION
 ARG MODEL_ANALYZER_CONTAINER_VERSION
@@ -49,18 +49,12 @@ RUN find /tmp/tritonclient -maxdepth 1 -type f -name \
 
 WORKDIR /opt/triton-model-analyzer
 RUN rm -fr *
-COPY --from=sdk_image /usr/local/bin/perf_analyzer .
-RUN chmod +x ./perf_analyzer
 
 COPY . .
 RUN chmod +x /opt/triton-model-analyzer/nvidia_entrypoint.sh
-RUN chmod +x build_wheel.sh && \
-    ./build_wheel.sh perf_analyzer true && \
-    rm -f perf_analyzer
 
 RUN python3 -m pip install --upgrade pip && \
     python3 -m pip install nvidia-pyindex && \
-    python3 -m pip install wheels/triton_model_analyzer-*-manylinux1_x86_64.whl && \
     python3 -m pip install wheel setuptools docker numpy pillow future grpcio && \
     python3 -m pip install requests gsutil awscli six boofuzz grpcio-channelz && \
     python3 -m pip install azure-cli grpcio-tools grpcio-channelz
@@ -68,11 +62,11 @@ RUN python3 -m pip install --upgrade pip && \
 
 RUN mkdir /opt/tritonserver/backends/fastertransformer && chmod 777 /opt/tritonserver/backends/fastertransformer
 
-FROM ftbe_sdk as ftbe_work
-# for debug
-RUN apt update -q && apt install -y --no-install-recommends openssh-server zsh tmux mosh locales-all clangd sudo
-RUN sed -i 's/#X11UseLocalhost yes/X11UseLocalhost no/g' /etc/ssh/sshd_config
-RUN mkdir /var/run/sshd
+# FROM ftbe_sdk as ftbe_work
+# # for debug
+# RUN apt update -q && apt install -y --no-install-recommends openssh-server zsh tmux mosh locales-all clangd sudo
+# RUN sed -i 's/#X11UseLocalhost yes/X11UseLocalhost no/g' /etc/ssh/sshd_config
+# RUN mkdir /var/run/sshd
 
 ENTRYPOINT ["/opt/triton-model-analyzer/nvidia_entrypoint.sh"]
 ENV MODEL_ANALYZER_VERSION ${MODEL_ANALYZER_VERSION}
