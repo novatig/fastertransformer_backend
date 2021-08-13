@@ -42,14 +42,14 @@ RUN wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/
     dpkg -i datacenter-gpu-manager_${DCGM_VERSION}_amd64.deb
 
 # Install tritonclient
-COPY --from=sdk /workspace/install/python /tmp/tritonclient
+COPY --from=sdk_image /workspace/install/python /tmp/tritonclient
 RUN find /tmp/tritonclient -maxdepth 1 -type f -name \
     "tritonclient-*-manylinux1_x86_64.whl" | xargs printf -- '%s[all]' | \
     xargs pip3 install --upgrade && rm -rf /tmp/tritonclient/
 
 WORKDIR /opt/triton-model-analyzer
 RUN rm -fr *
-COPY --from=sdk /usr/local/bin/perf_analyzer .
+COPY --from=sdk_image /usr/local/bin/perf_analyzer .
 RUN chmod +x ./perf_analyzer
 
 COPY . .
