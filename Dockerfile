@@ -1,7 +1,7 @@
 
 
-ARG BASE_IMAGE=nvcr.io/nvidia/tritonserver:21.02-py3
-ARG SDK_IMAGE=nvcr.io/nvidia/tritonserver:21.02-py3-sdk
+ARG BASE_IMAGE=nvcr.io/nvidia/tritonserver:21.07-py3
+ARG SDK_IMAGE=nvcr.io/nvidia/tritonserver:21.07-py3-sdk
 
 FROM ${SDK_IMAGE} AS sdk_image
 
@@ -94,7 +94,7 @@ COPY --from=sdk_image /workspace/datacenter-gpu-manager_*_amd64.deb /tmp/
 RUN dpkg -i /tmp/datacenter-gpu-manager_*_amd64.deb && rm -rf /tmp/datacenter-gpu-manager_*_amd64.deb
 
 # Install Model Analyzer
-ARG TRITON_MODEL_ANALYZER_REPO_TAG=r20.12
+ARG TRITON_MODEL_ANALYZER_REPO_TAG=r21.07
 ARG TRITON_MODEL_ANALYZER_REPO="https://github.com/triton-inference-server/model_analyzer@${TRITON_MODEL_ANALYZER_REPO_TAG}"
 RUN pip3 install "git+${TRITON_MODEL_ANALYZER_REPO}"
 ################################################################################
