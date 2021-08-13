@@ -74,7 +74,7 @@ parameters {
 parameters {
   key: "tensor_para_size"
   value: {
-    string_value: "8"
+    string_value: "4"
   }
 }
 parameters {
