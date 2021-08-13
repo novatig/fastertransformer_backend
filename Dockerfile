@@ -1,106 +1,24 @@
-
-
 ARG BASE_IMAGE=nvcr.io/nvidia/tritonserver:21.07-py3
 ARG SDK_IMAGE=nvcr.io/nvidia/tritonserver:21.07-py3-sdk
 
-FROM ${SDK_IMAGE} AS sdk_image
+ARG MODEL_ANALYZER_VERSION=1.6.0
+ARG MODEL_ANALYZER_CONTAINER_VERSION=21.07
 
-FROM ${BASE_IMAGE} as ftbe_sdk
-#RUN mkdir /usr/local/mpi
-#COPY --from=mpi_image /usr/local/mpi/ /usr/local/mpi/
+FROM ${SDK_IMAGE} as sdk_image
 
-RUN     apt-get update && \
-        apt-get install -y --no-install-recommends \
-        software-properties-common \
-        autoconf                   \
-        automake                   \
-        build-essential            \
-        docker.io                  \
-        git                        \
-        libre2-dev                 \
-        libssl-dev                 \
-        libtool                    \
-        libboost-dev               \
-        libcurl4-openssl-dev       \
-        libb64-dev                 \
-        patchelf                   \
-        python3-dev                \
-        python3-pip                \
-        python3-setuptools         \
-        rapidjson-dev              \
-        unzip                      \
-        wget                       \
-        zlib1g-dev                 \
-        pkg-config                 \
-        uuid-dev
+FROM $BASE_IMAGE as ftbe_sdk
 
-RUN     pip3 install --upgrade pip && \
-        pip3 install --upgrade wheel setuptools docker && \
-        pip3 install grpcio-tools grpcio-channelz
+ARG MODEL_ANALYZER_VERSION
+ARG MODEL_ANALYZER_CONTAINER_VERSION
 
-RUN     wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | \
-        gpg --dearmor - | \
-        tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null &&  \
-        apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main' && \
-        apt-get update && \
-        apt-get install -y --no-install-recommends \
-        cmake-data=3.18.4-0kitware1ubuntu20.04.1 cmake=3.18.4-0kitware1ubuntu20.04.1
-
-
-################################################################################
-## COPY from Dockerfile.sdk
-################################################################################
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-            software-properties-common \
-            autoconf \
-            automake \
-            build-essential \
-            curl \
-            git \
-            libb64-dev \
-            libopencv-dev \
-            libopencv-core-dev \
-            libssl-dev \
-            libtool \
-            pkg-config \
-            python3 \
-            python3-pip \
-            python3-dev \
-            rapidjson-dev \
-            vim \
-            wget && \
-    pip3 install --upgrade wheel setuptools && \
-    pip3 install --upgrade grpcio-tools && \
-    pip3 install --upgrade pip
-
-# Build expects "python" executable (not python3).
-RUN rm -f /usr/bin/python && \
-    ln -s /usr/bin/python3 /usr/bin/python
-# Install the dependencies needed to run the client examples. These
-# are not needed for building but including them allows this image to
-# be used to run the client examples.
-RUN pip3 install --upgrade numpy pillow
-##     find install/python/ -maxdepth 1 -type f -name \
-##     "tritonclient-*-manylinux1_x86_64.whl" | xargs printf -- '%s[all]' | \
-##     xargs pip3 install --upgrade
-
-# Install DCGM
 # DCGM version to install for Model Analyzer
-## ARG DCGM_VERSION=2.0.13
-## RUN wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/datacenter-gpu-manager_${DCGM_VERSION}_amd64.deb && \
-##     dpkg -i datacenter-gpu-manager_${DCGM_VERSION}_amd64.deb
-COPY --from=sdk_image /workspace/datacenter-gpu-manager_*_amd64.deb /tmp/
-RUN dpkg -i /tmp/datacenter-gpu-manager_*_amd64.deb && rm -rf /tmp/datacenter-gpu-manager_*_amd64.deb
+ENV DCGM_VERSION=2.0.13
 
-# Install Model Analyzer
-ARG TRITON_MODEL_ANALYZER_REPO_TAG=r21.07
-ARG TRITON_MODEL_ANALYZER_REPO="https://github.com/triton-inference-server/model_analyzer@${TRITON_MODEL_ANALYZER_REPO_TAG}"
-RUN pip3 install "git+${TRITON_MODEL_ANALYZER_REPO}"
-################################################################################
-## COPY from Dockerfile.QA
-################################################################################
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Ensure apt-get won't prompt for selecting options
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && \
+    apt-get install -y python3-dev \
         libpng-dev \
         curl \
         libopencv-dev \
@@ -114,17 +32,39 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         golang-go \
         nginx \
         protobuf-compiler \
-        valgrind
+        valgrind \
+        wkhtmltopdf
 
-RUN pip3 install --upgrade wheel setuptools && \
-    pip3 install --upgrade numpy pillow future grpcio requests gsutil awscli six boofuzz grpcio-channelz azure-cli
+RUN mkdir -p /opt/triton-model-analyzer
 
-# need protoc-gen-go to generate go specific gRPC modules
-RUN go get github.com/golang/protobuf/protoc-gen-go && \
-        go get google.golang.org/grpc
+# Install DCGM
+RUN wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/datacenter-gpu-manager_${DCGM_VERSION}_amd64.deb && \
+    dpkg -i datacenter-gpu-manager_${DCGM_VERSION}_amd64.deb
 
-COPY --from=sdk_image /workspace/install/python/tritonclient-2.7.0-py3-none-manylinux1_x86_64.whl /tmp/
-RUN pip3 install --upgrade /tmp/tritonclient-2.7.0-py3-none-manylinux1_x86_64.whl[all]
+# Install tritonclient
+COPY --from=sdk /workspace/install/python /tmp/tritonclient
+RUN find /tmp/tritonclient -maxdepth 1 -type f -name \
+    "tritonclient-*-manylinux1_x86_64.whl" | xargs printf -- '%s[all]' | \
+    xargs pip3 install --upgrade && rm -rf /tmp/tritonclient/
+
+WORKDIR /opt/triton-model-analyzer
+RUN rm -fr *
+COPY --from=sdk /usr/local/bin/perf_analyzer .
+RUN chmod +x ./perf_analyzer
+
+COPY . .
+RUN chmod +x /opt/triton-model-analyzer/nvidia_entrypoint.sh
+RUN chmod +x build_wheel.sh && \
+    ./build_wheel.sh perf_analyzer true && \
+    rm -f perf_analyzer
+
+RUN python3 -m pip install --upgrade pip && \
+    python3 -m pip install nvidia-pyindex && \
+    python3 -m pip install wheels/triton_model_analyzer-*-manylinux1_x86_64.whl && \
+    python3 -m pip install wheel setuptools docker numpy pillow future grpcio && \
+    python3 -m pip install requests gsutil awscli six boofuzz grpcio-channelz && \
+    python3 -m pip install azure-cli grpcio-tools grpcio-channelz
+
 
 RUN mkdir /opt/tritonserver/backends/fastertransformer && chmod 777 /opt/tritonserver/backends/fastertransformer
 
@@ -134,4 +74,7 @@ RUN apt update -q && apt install -y --no-install-recommends openssh-server zsh t
 RUN sed -i 's/#X11UseLocalhost yes/X11UseLocalhost no/g' /etc/ssh/sshd_config
 RUN mkdir /var/run/sshd
 
-ENTRYPOINT service ssh restart && bash
+ENTRYPOINT ["/opt/triton-model-analyzer/nvidia_entrypoint.sh"]
+ENV MODEL_ANALYZER_VERSION ${MODEL_ANALYZER_VERSION}
+ENV MODEL_ANALYZER_CONTAINER_VERSION ${MODEL_ANALYZER_CONTAINER_VERSION}
+
