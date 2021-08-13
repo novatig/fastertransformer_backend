@@ -43,11 +43,11 @@ Note that this is a research and prototyping tool, not a formal product or maint
 
 * Prepare Machine
 
-We provide a docker file, which bases on Triton image `nvcr.io/nvidia/tritonserver:21.02-py3`, to setup the environment.
+We provide a docker file, which bases on Triton image `nvcr.io/nvidia/tritonserver:21.07-py3`, to setup the environment.
 
 ```bash
-mkdir workspace && cd workspace 
-git clone https://github.com/triton-inference-server/fastertransformer_backend.git
+mkdir -p workspace && cd workspace 
+git clone https://github.com/novatig/fastertransformer_backend.git
 nvidia-docker build --tag ft_backend --file fastertransformer_backend/Dockerfile .
 nvidia-docker run --gpus=all -it --rm --volume $PWD:/workspace -w /workspace --name ft-work  ft_backend
 export WORKSPACE=$(pwd)
@@ -56,7 +56,7 @@ export WORKSPACE=$(pwd)
 * Install libraries for Megatron (option)
 
 ```bash
-pip install torch regex fire
+pip3 install regex fire
 git clone https://github.com/NVIDIA/apex
 cd apex
 pip install -v --disable-pip-version-check --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./
@@ -82,8 +82,8 @@ wget https://s3.amazonaws.com/models.huggingface.co/bert/gpt2-merges.txt -P mode
 wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/megatron_lm_345m/versions/v0.0/zip -O megatron_lm_345m_v0.0.zip
 mkdir -p models/megatron-models/345m
 unzip megatron_lm_345m_v0.0.zip -d models/megatron-models/345m
-python _deps/repo-ft-src/sample/pytorch/utils/megatron_ckpt_convert.py -i ./models/megatron-models/345m/release/ -o ./models/megatron-models/c-model/345m/ -t_g 1 -i_g 8 -h_n 16
-cp ./models/megatron-models/c-model/345m/8-gpu $WORKSPACE/fastertransformer_backend/all_models/fastertransformer/1/ -r
+python _deps/repo-ft-src/sample/pytorch/utils/megatron_ckpt_convert.py -i ./models/megatron-models/345m/release/ -o ./models/megatron-models/c-model/345m/ -t_g 1 -i_g 4 -h_n 16
+cp ./models/megatron-models/c-model/345m/4-gpu $WORKSPACE/fastertransformer_backend/all_models/fastertransformer/1/ -r
 ```
 
 * **Prepare the ft-triton-backend docker**
@@ -108,7 +108,7 @@ cd $WORKSPACE && ln -s server/qa/common .
 # Recommend to modify the SERVER_TIMEOUT of common/util.sh to longer time
 cd $WORKSPACE/fastertransformer_backend/build/
 # bash $WORKSPACE/fastertransformer_backend/tools/run_server.sh # This method fails since we add MPI features
-mpirun -n 1 /opt/tritonserver/bin/tritonserver --model-repository=$WORKSPACE/fastertransformer_backend/all_models/ &
+mpirun --allow-run-as-root -n 1 /opt/tritonserver/bin/tritonserver --model-repository=$WORKSPACE/fastertransformer_backend/all_models/ &
 bash $WORKSPACE/fastertransformer_backend/tools/run_client.sh
 python _deps/repo-ft-src/sample/pytorch/utils/convert_gpt_token.py --out_file=triton_out # Used for checking result
 ```
@@ -145,7 +145,7 @@ bash $WORKSPACE/fastertransformer_backend/tools/benchmark_single_node.sh -b 8 -i
 
 
 
-## How to Run multi-node on the Cluster with Enroot/Pyxis support
+## (UNTESTED) How to Run multi-node on the Cluster with Enroot/Pyxis support
 
 **Warp up everything in a docker**: as described in *Prepare the ft-triton-backend docker* step.
 
