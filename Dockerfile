@@ -57,7 +57,8 @@ RUN python3 -m pip install --upgrade pip && \
     python3 -m pip install nvidia-pyindex && \
     python3 -m pip install wheel setuptools docker numpy pillow future grpcio && \
     python3 -m pip install requests gsutil awscli six boofuzz grpcio-channelz && \
-    python3 -m pip install azure-cli grpcio-tools grpcio-channelz
+    python3 -m pip install azure-cli grpcio-tools grpcio-channelz && \
+    python3 -m pip install torch==1.9.0+cu111 -f https://download.pytorch.org/whl/torch_stable.html
 
 
 RUN mkdir /opt/tritonserver/backends/fastertransformer && chmod 777 /opt/tritonserver/backends/fastertransformer
