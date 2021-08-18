@@ -26,7 +26,7 @@
 
 name: "fastertransformer"
 backend: "fastertransformer"
-default_model_filename: "gpt3-c-model-8gpu"
+default_model_filename: "gpt-j-model"
 max_batch_size: 128
 input [
   {
@@ -153,5 +153,17 @@ parameters {
   key: "repetition_penalty"
   value: {
     string_value: "1.0"
+  }
+}
+parameters {
+  key: "rotary_embedding"
+  value: {
+    string_value: "64"
+  }
+}
+parameters {
+  key: "attention_mlp_in_parallel"
+  value: {
+    string_value: "1"
   }
 }
