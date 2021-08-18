@@ -32,6 +32,7 @@ RUN apt-get update && \
         unzip                      \
         wget                       \
         pkg-config                 \
+        zstd                 \
         swig \
         golang-go \
         nginx \
