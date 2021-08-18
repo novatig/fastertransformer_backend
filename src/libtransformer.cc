@@ -155,6 +155,15 @@ ModelState::ModelState(TRITONBACKEND_Model* triton_model)
     key.MemberAsString("string_value", &value);
     return value;
   };
+  auto param_try_int = [&] (const char* field, const int default_) {
+    int ret = 0;
+    try {
+      ret = std::stoi(param_get(field));
+    } catch (std::invalid_argument& ia) {
+      ret = default_;
+    }
+    return ret;
+  };
   auto param_get_int = [&] (const char* field) {
     int ret = 0;
     try {
@@ -192,8 +201,10 @@ ModelState::ModelState(TRITONBACKEND_Model* triton_model)
                    param_get_int("layer_para_batch_size"),
                    param_get_float("probability_threshold"),
                    param_get_int("is_fuse_QKV"),
-                   param_get_int("temperature"),
+                   param_get_float("temperature"),
                    param_get_float("repetition_penalty"),
+                   param_try_int("rotary_embedding", 0),
+                   param_try_int("attention_mlp_in_parallel", 0),
                    param_get("model_name"),
                    modelVersionPath));
   else
@@ -210,8 +221,10 @@ ModelState::ModelState(TRITONBACKEND_Model* triton_model)
                    param_get_int("layer_para_batch_size"),
                    param_get_float("probability_threshold"),
                    param_get_int("is_fuse_QKV"),
-                   param_get_int("temperature"),
+                   param_get_float("temperature"),
                    param_get_float("repetition_penalty"),
+                   param_try_int("rotary_embedding", 0),
+                   param_try_int("attention_mlp_in_parallel", 0),
                    param_get("model_name"),
                    modelVersionPath));
 
