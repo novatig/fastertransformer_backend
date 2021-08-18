@@ -50,7 +50,7 @@ RUN find /tmp/tritonclient -maxdepth 1 -type f -name \
 WORKDIR /opt/fastertransformer_backend
 RUN rm -fr *
 
-COPY . .
+COPY ./fastertransformer_backend .
 RUN chmod +x /opt/fastertransformer_backend/nvidia_entrypoint.sh
 
 RUN python3 -m pip install --upgrade pip && \
