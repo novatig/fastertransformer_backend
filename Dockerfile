@@ -28,12 +28,24 @@ RUN apt-get update && \
         python3-pip \
         python3-protobuf \
         python3-setuptools \
+        rapidjson-dev              \
+        unzip                      \
+        wget                       \
+        pkg-config                 \
         swig \
         golang-go \
         nginx \
         protobuf-compiler \
         valgrind \
         wkhtmltopdf
+
+RUN     wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | \
+        gpg --dearmor - | \
+        tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null &&  \
+        apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main' && \
+        apt-get update && \
+        apt-get install -y --no-install-recommends \
+        cmake-data=3.18.4-0kitware1ubuntu20.04.1 cmake=3.18.4-0kitware1ubuntu20.04.1
 
 RUN mkdir -p /opt/fastertransformer_backend
 
