@@ -36,9 +36,9 @@ option(TRITON_ENABLE_STATS "Include statistics collections in backend" ON)
 set(TRITON_PYTORCH_INCLUDE_PATHS "" CACHE PATH "Paths to Torch includes")
 set(TRITON_PYTORCH_LIB_PATHS "" CACHE PATH "Paths to Torch libraries")
 
-set(TRITON_BACKEND_REPO_TAG "r21.02" CACHE STRING "Tag for triton-inference-server/backend repo")
-set(TRITON_CORE_REPO_TAG "r21.02" CACHE STRING "Tag for triton-inference-server/core repo")
-set(TRITON_COMMON_REPO_TAG "r21.02" CACHE STRING "Tag for triton-inference-server/common repo")
+set(TRITON_BACKEND_REPO_TAG "r21.07" CACHE STRING "Tag for triton-inference-server/backend repo")
+set(TRITON_CORE_REPO_TAG "r21.07" CACHE STRING "Tag for triton-inference-server/core repo")
+set(TRITON_COMMON_REPO_TAG "r21.07" CACHE STRING "Tag for triton-inference-server/common repo")
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
@@ -50,7 +50,7 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
 find_package(Python3 REQUIRED COMPONENTS Development)
 
 find_package(FasterTransformer)
-find_package(CUDA 10.1 REQUIRED)
+find_package(CUDA 11.0 REQUIRED)
 find_package(MPI REQUIRED)
 find_package(NCCL REQUIRED)
 
@@ -89,7 +89,7 @@ FetchContent_Declare(
 )
 FetchContent_Declare(
   repo-ft
-  GIT_REPOSITORY https://github.com/NVIDIA/FasterTransformer.git
+  GIT_REPOSITORY https://gitlab-master.nvidia.com/gnovati/FasterTransformer
   GIT_TAG main
   GIT_SHALLOW ON
 )
@@ -117,7 +117,7 @@ add_library(
 )
 
 #find_package(CUDAToolkit REQUIRED)
-find_package(CUDA 10.1 REQUIRED)
+find_package(CUDA 11.0 REQUIRED)
 find_package(MPI REQUIRED)
 ##find_package(NCCL REQUIRED)
 #if (${CUDA_VERSION} GREATER_EQUAL 11.0)
