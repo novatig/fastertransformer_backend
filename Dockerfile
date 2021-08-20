@@ -28,6 +28,11 @@ RUN apt-get update && \
         python3-pip \
         python3-protobuf \
         python3-setuptools \
+        rapidjson-dev              \
+        unzip                      \
+        wget                       \
+        pkg-config                 \
+        zstd                 \
         swig \
         golang-go \
         nginx \
@@ -35,7 +40,15 @@ RUN apt-get update && \
         valgrind \
         wkhtmltopdf
 
-RUN mkdir -p /opt/triton-model-analyzer
+RUN     wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | \
+        gpg --dearmor - | \
+        tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null &&  \
+        apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main' && \
+        apt-get update && \
+        apt-get install -y --no-install-recommends \
+        cmake-data=3.18.4-0kitware1ubuntu20.04.1 cmake=3.18.4-0kitware1ubuntu20.04.1
+
+RUN mkdir -p /opt/fastertransformer_backend
 
 # Install DCGM
 RUN wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/datacenter-gpu-manager_${DCGM_VERSION}_amd64.deb && \
@@ -47,11 +60,11 @@ RUN find /tmp/tritonclient -maxdepth 1 -type f -name \
     "tritonclient-*-manylinux1_x86_64.whl" | xargs printf -- '%s[all]' | \
     xargs pip3 install --upgrade && rm -rf /tmp/tritonclient/
 
-WORKDIR /opt/triton-model-analyzer
+WORKDIR /opt/fastertransformer_backend
 RUN rm -fr *
 
-COPY . .
-RUN chmod +x /opt/triton-model-analyzer/nvidia_entrypoint.sh
+COPY ./fastertransformer_backend .
+RUN chmod +x /opt/fastertransformer_backend/nvidia_entrypoint.sh
 
 RUN python3 -m pip install --upgrade pip && \
     python3 -m pip install nvidia-pyindex && \
@@ -69,7 +82,7 @@ RUN mkdir /opt/tritonserver/backends/fastertransformer && chmod 777 /opt/tritons
 # RUN sed -i 's/#X11UseLocalhost yes/X11UseLocalhost no/g' /etc/ssh/sshd_config
 # RUN mkdir /var/run/sshd
 
-ENTRYPOINT ["/opt/triton-model-analyzer/nvidia_entrypoint.sh"]
+ENTRYPOINT ["/opt/fastertransformer_backend/nvidia_entrypoint.sh"]
 ENV MODEL_ANALYZER_VERSION ${MODEL_ANALYZER_VERSION}
 ENV MODEL_ANALYZER_CONTAINER_VERSION ${MODEL_ANALYZER_CONTAINER_VERSION}
 

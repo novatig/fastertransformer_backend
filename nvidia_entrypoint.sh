@@ -16,7 +16,7 @@
 set -e
 cat <<EOF
 =============================
-=== Triton Model Analyzer ===
+=== FasterTransformer Backend ===
 =============================
 NVIDIA Release ${MODEL_ANALYZER_CONTAINER_VERSION} (build ${NVIDIA_BUILD_ID})
 Copyright (c) 2020-2021, NVIDIA CORPORATION.  All rights reserved.

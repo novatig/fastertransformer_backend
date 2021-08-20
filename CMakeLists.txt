@@ -90,7 +90,7 @@ FetchContent_Declare(
 FetchContent_Declare(
   repo-ft
   GIT_REPOSITORY https://gitlab-master.nvidia.com/gnovati/FasterTransformer
-  GIT_TAG main
+  GIT_TAG master
   GIT_SHALLOW ON
 )
 FetchContent_MakeAvailable(repo-common repo-core repo-backend repo-ft)

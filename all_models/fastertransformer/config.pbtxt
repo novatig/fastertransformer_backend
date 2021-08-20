@@ -26,7 +26,7 @@
 
 name: "fastertransformer"
 backend: "fastertransformer"
-default_model_filename: "gpt3-c-model-8gpu"
+default_model_filename: "gpt-j-model"
 max_batch_size: 128
 input [
   {
@@ -74,7 +74,7 @@ parameters {
 parameters {
   key: "tensor_para_size"
   value: {
-    string_value: "4"
+    string_value: "8"
   }
 }
 parameters {
@@ -92,7 +92,7 @@ parameters {
 parameters {
   key: "max_seq_len"
   value: {
-    string_value: "32"
+    string_value: "128"
   }
 }
 parameters {
@@ -110,19 +110,19 @@ parameters {
 parameters {
   key: "size_per_head"
   value: {
-    string_value: "64"
+    string_value: "256"
   }
 }
 parameters {
   key: "vocab_size"
   value: {
-    string_value: "50304"
+    string_value: "50400"
   }
 }
 parameters {
   key: "decoder_layers"
   value: {
-    string_value: "24"
+    string_value: "28"
   }
 }
 parameters {
@@ -153,5 +153,17 @@ parameters {
   key: "repetition_penalty"
   value: {
     string_value: "1.0"
+  }
+}
+parameters {
+  key: "rotary_embedding"
+  value: {
+    string_value: "64"
+  }
+}
+parameters {
+  key: "attention_mlp_in_parallel"
+  value: {
+    string_value: "1"
   }
 }
